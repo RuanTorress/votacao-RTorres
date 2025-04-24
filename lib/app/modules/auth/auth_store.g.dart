@@ -56,12 +56,76 @@ mixin _$AuthStore on _AuthStoreBase, Store {
     });
   }
 
+  late final _$smsSentAtom =
+      Atom(name: '_AuthStoreBase.smsSent', context: context);
+
+  @override
+  bool get smsSent {
+    _$smsSentAtom.reportRead();
+    return super.smsSent;
+  }
+
+  @override
+  set smsSent(bool value) {
+    _$smsSentAtom.reportWrite(value, super.smsSent, () {
+      super.smsSent = value;
+    });
+  }
+
+  late final _$isVerifyingAtom =
+      Atom(name: '_AuthStoreBase.isVerifying', context: context);
+
+  @override
+  bool get isVerifying {
+    _$isVerifyingAtom.reportRead();
+    return super.isVerifying;
+  }
+
+  @override
+  set isVerifying(bool value) {
+    _$isVerifyingAtom.reportWrite(value, super.isVerifying, () {
+      super.isVerifying = value;
+    });
+  }
+
+  late final _$verificationErrorAtom =
+      Atom(name: '_AuthStoreBase.verificationError', context: context);
+
+  @override
+  String? get verificationError {
+    _$verificationErrorAtom.reportRead();
+    return super.verificationError;
+  }
+
+  @override
+  set verificationError(String? value) {
+    _$verificationErrorAtom.reportWrite(value, super.verificationError, () {
+      super.verificationError = value;
+    });
+  }
+
   late final _$fetchCooperadoAsyncAction =
       AsyncAction('_AuthStoreBase.fetchCooperado', context: context);
 
   @override
   Future<bool> fetchCooperado(String login) {
     return _$fetchCooperadoAsyncAction.run(() => super.fetchCooperado(login));
+  }
+
+  late final _$sendCodeAsyncAction =
+      AsyncAction('_AuthStoreBase.sendCode', context: context);
+
+  @override
+  Future<bool> sendCode() {
+    return _$sendCodeAsyncAction.run(() => super.sendCode());
+  }
+
+  late final _$verifyCodeAsyncAction =
+      AsyncAction('_AuthStoreBase.verifyCode', context: context);
+
+  @override
+  Future<bool> verifyCode(String code) {
+    return _$verifyCodeAsyncAction.run(() => super.verifyCode(code));
   }
 
   late final _$_AuthStoreBaseActionController =
@@ -83,7 +147,10 @@ mixin _$AuthStore on _AuthStoreBase, Store {
     return '''
 cooperado: ${cooperado},
 isLoading: ${isLoading},
-error: ${error}
+error: ${error},
+smsSent: ${smsSent},
+isVerifying: ${isVerifying},
+verificationError: ${verificationError}
     ''';
   }
 }

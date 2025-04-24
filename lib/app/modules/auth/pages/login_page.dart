@@ -90,9 +90,8 @@ class _LoginPageState extends State<LoginPage> {
                       // Input
                       TextField(
                         controller: _croController,
-                        keyboardType: TextInputType.text,                        
+                        keyboardType: TextInputType.text,
                         decoration: InputDecoration(
-                          
                           hintText: 'Digite seu CRO (ex: 12345)',
                           prefixIcon: const Icon(
                               Icons.badge), // ou algum ícone tipo identificação
@@ -108,19 +107,29 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () async{
-                            bool success = await store.fetchCooperado(_croController.text);
+                          onPressed: () async {
+                            bool success =
+                                await store.fetchCooperado(_croController.text);
                             if (success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Login realizado com sucesso!'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                              bool codeSent = await store.sendCode();
+
+                              if (codeSent) {
+                                Modular.to.navigate(
+                                    '/otp'); // vai para a tela de verificação
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        store.error ?? 'Erro ao enviar SMS'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(store.error ?? 'Erro desconhecido'),
+                                  content: Text(store.error ??
+                                      'Erro ao buscar cooperado'),
                                   backgroundColor: Colors.red,
                                 ),
                               );
