@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:votacao_uniodonto/app/global_store.dart';
 import 'package:votacao_uniodonto/app/modules/auth/auth_store.dart';
 
 class OtpPage extends StatefulWidget {
@@ -12,6 +13,7 @@ class OtpPage extends StatefulWidget {
 
 class _OtpPageState extends State<OtpPage> {
   final AuthStore store = Modular.get<AuthStore>();
+  final GlobalStore globalStore = Modular.get<GlobalStore>();
   final TextEditingController _codeController = TextEditingController();
 
   @override
@@ -62,7 +64,7 @@ class _OtpPageState extends State<OtpPage> {
                   const SizedBox(height: 16),
 
                   Text(
-                    'Enviamos um código para o número:\n${store.cooperado?.celular ?? '---'}',
+                    'Enviamos um código para o número:\n${globalStore.cooperado?.celular ?? '---'}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 16),
                   ).animate().fadeIn().slideY(begin: 0.3),

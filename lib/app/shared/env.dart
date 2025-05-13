@@ -1,14 +1,14 @@
 enum AppEnvironment { development, production }
 
 class Env {
-  static const AppEnvironment current = AppEnvironment.production;
+  static const AppEnvironment current = AppEnvironment.development;
 
   static String get apiUrl {
     switch (current) {
       case AppEnvironment.production:
-        return 'http://localhost:3000';
+        return 'https://beuniodontogyn.uniodontogoiania.com.br:3000';
       case AppEnvironment.development:
-      return 'http://192.168.1.8:3000'; 
+      return 'http://192.168.0.91:3000'; 
     }
   }
 
@@ -17,7 +17,7 @@ class Env {
       case AppEnvironment.production:
         return 'http://localhost:3001';
       case AppEnvironment.development:
-      return 'http://192.168.1.8:3000'; 
+      return 'http://192.168.0.91:3001'; 
     }
   }
 

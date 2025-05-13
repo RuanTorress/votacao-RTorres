@@ -1,4 +1,10 @@
+import 'dart:convert';
+
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:mobx/mobx.dart';
+import 'package:votacao_uniodonto/app/global_store.dart';
+import 'package:votacao_uniodonto/app/modules/auth/models/cooperado_models.dart';
+import 'package:votacao_uniodonto/app/modules/auth/models/voto_model.dart';
 import 'package:votacao_uniodonto/app/modules/voting/models/pauta_model.dart';
 import 'package:votacao_uniodonto/app/modules/voting/voting_service.dart';
 
@@ -8,6 +14,7 @@ class VotingStore = _VotingStoreBase with _$VotingStore;
 
 abstract class _VotingStoreBase with Store {
   final VotingService _service = VotingService();
+  final GlobalStore globalStore = Modular.get<GlobalStore>();
 
   @observable
   ObservableList<PautaModel> pautas = ObservableList<PautaModel>();
@@ -18,9 +25,58 @@ abstract class _VotingStoreBase with Store {
   @observable
   String? error;
 
-  // Lista de seleções de votos para cada pauta
   @observable
-  ObservableMap<int, String?> selectedVotes = ObservableMap<int, String?>();
+  ObservableList<VotoModel> votosPendentes = ObservableList<VotoModel>();
+
+  @observable
+  ObservableMap<int, List<String>> votosSelecionados =
+      ObservableMap<int, List<String>>();
+
+  @action
+  Future<void> confirmarVoto({
+    required int pautaId,
+    required List<String> votos,
+  }) async {
+    try {
+      final ip = await _service.getIp();
+      final location = await _service.getGeolocation();
+      final now = DateTime.now();
+
+      final voto = VotoModel(
+        pautaId: pautaId,
+        votos: votos,
+        ip: ip,
+        dataHora: now,
+        geolocalizacao: location,
+        cooperadoId: globalStore.cooperado!.id,
+        cooperadoName: globalStore.cooperado!.nomeCompleto,
+      );
+
+      votosPendentes.add(voto);
+      print('✅ Voto salvo localmente: ${voto.toJson()}');
+    } catch (e) {
+      print('Erro ao registrar voto local: $e');
+    }
+  }
+
+  @action
+  void selecionarVoto(int pautaId, String voto,
+      {bool multiplaEscolha = false}) {
+    final votos = votosSelecionados[pautaId] ?? [];
+
+    if (multiplaEscolha) {
+      if (votos.contains(voto)) {
+        votos.remove(voto);
+      } else if (votos.length < 2) {
+        votos.add(voto);
+      }
+    } else {
+      votosSelecionados[pautaId] = [voto];
+      return;
+    }
+
+    votosSelecionados[pautaId] = [...votos];
+  }
 
   @action
   Future<void> loadPautas() async {
@@ -35,7 +91,7 @@ abstract class _VotingStoreBase with Store {
       if (resultado.success && resultado.data != null) {
         pautas
           ..clear()
-          ..addAll(resultado.data!); // ✅ funciona com ObservableList          
+          ..addAll(resultado.data!); // ✅ funciona com ObservableList
       } else {
         error = resultado.message ?? 'Erro desconhecido ao carregar pautas';
       }
@@ -46,14 +102,45 @@ abstract class _VotingStoreBase with Store {
     }
   }
 
-  // Ação para selecionar o voto
   @action
-  void selectVote(int pautaId, String vote) {
-    selectedVotes[pautaId] = vote;
+Future<void> confirmarTodosVotos() async {
+  List<String> falhas = [];
+
+  for (var entry in votosSelecionados.entries) {
+    final pautaId = entry.key;
+    final votos = entry.value;
+
+    try {
+      final ip = await _service.getIp();
+      final location = await _service.getGeolocation();
+      final now = DateTime.now();
+
+      final voto = VotoModel(
+        pautaId: pautaId,
+        votos: votos,
+        ip: ip,
+        dataHora: now,
+        geolocalizacao: location,
+        cooperadoId: globalStore.cooperado!.id,
+        cooperadoName: globalStore.cooperado!.nomeCompleto,
+      );
+
+      final result = await _service.registrarVoto(voto.toJson());
+
+      if (!result.success) {
+        falhas.add('Pauta $pautaId: ${result.message}');
+      }
+
+      print('📤 Voto JSON: ${jsonEncode(voto.toJson())}');
+    } catch (e) {
+      falhas.add('Pauta $pautaId: erro inesperado');
+    }
   }
 
-  // Verifica se o voto foi selecionado para habilitar o botão
-  bool isVoteSelected(int pautaId) {
-    return selectedVotes[pautaId] != null;
+  votosSelecionados.clear();
+
+  if (falhas.isNotEmpty) {
+    throw Exception(falhas.join('\n'));
   }
+}
 }

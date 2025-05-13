@@ -1,5 +1,7 @@
+import 'package:flutter_modular/flutter_modular.dart';
 import 'package:mobx/mobx.dart';
 import 'package:votacao_uniodonto/app/modules/auth/auth_service.dart';
+import 'package:votacao_uniodonto/app/global_store.dart';
 import 'package:votacao_uniodonto/app/modules/auth/models/cooperado_models.dart';
 
 part 'auth_store.g.dart';
@@ -8,13 +10,11 @@ class AuthStore = _AuthStoreBase with _$AuthStore;
 
 abstract class _AuthStoreBase with Store {
   final AuthServices _authServices = AuthServices();
+  final GlobalStore _globalStore = Modular.get<GlobalStore>();
 
   // ======================
   // 🧍‍♂️ Cooperado & Login
   // ======================
-
-  @observable
-  CooperadoModel? cooperado;
 
   @observable
   bool isLoading = false;
@@ -31,7 +31,8 @@ abstract class _AuthStoreBase with Store {
     final result = await _authServices.getCooperadoByLogin(login);
 
     if (result.success && result.data != null && result.data!.isNotEmpty) {
-      cooperado = result.data!.first;
+      final cooperado = result.data!.first;
+      _globalStore.setCooperado(cooperado); // Salva o cooperado no GlobalStore
       isLoading = false;
       return true;
     } else {
@@ -60,7 +61,7 @@ abstract class _AuthStoreBase with Store {
     isLoading = true;
     error = null;
 
-    final celular = cooperado?.celular;
+    final celular = _globalStore.cooperado?.celular; // Usando cooperado do GlobalStore
     if (celular == null || celular.isEmpty) {
       error = 'Telefone não encontrado.';
       isLoading = false;
@@ -109,7 +110,7 @@ abstract class _AuthStoreBase with Store {
 
   @action
   void clear() {
-    cooperado = null;
+    _globalStore.clearCooperado(); // Limpa o cooperado no GlobalStore
     error = null;
     smsSent = false;
     isVerifying = false;

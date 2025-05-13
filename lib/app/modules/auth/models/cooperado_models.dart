@@ -1,4 +1,5 @@
 class CooperadoModel {
+  final int id;          // Novo campo ID
   final String nomeCompleto;
   final String cpf;
   final String celular;
@@ -6,6 +7,7 @@ class CooperadoModel {
   final DateTime dtNascimento;
 
   CooperadoModel({
+    required this.id,        // Agora exigimos o ID no construtor
     required this.nomeCompleto,
     required this.cpf,
     required this.celular,
@@ -15,6 +17,7 @@ class CooperadoModel {
 
   factory CooperadoModel.fromJson(Map<String, dynamic> json) {
     return CooperadoModel(
+      id: json['id'] ?? '',  // Garantindo que o ID seja atribuído
       nomeCompleto: json['nome_completo'] ?? '',
       cpf: json['cpf'] ?? '',
       celular: json['celular'] ?? '',
@@ -25,6 +28,7 @@ class CooperadoModel {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,               // Incluindo o ID no JSON
       'nome_completo': nomeCompleto,
       'cpf': cpf,
       'celular': celular,

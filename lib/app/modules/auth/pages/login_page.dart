@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:votacao_uniodonto/app/global_store.dart';
 import 'package:votacao_uniodonto/app/modules/auth/auth_store.dart';
 
 class LoginPage extends StatefulWidget {
@@ -12,6 +13,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   AuthStore store = Modular.get<AuthStore>();
+  final GlobalStore globalStore = Modular.get<GlobalStore>();
 
   TextEditingController _croController = TextEditingController();
 
@@ -63,9 +65,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   child: Column(
                     children: [
-                      store.cooperado != null
+                      globalStore.cooperado != null
                           ? Text(
-                              'Olá, ${store.cooperado?.nomeCompleto}!',
+                              'Olá, ${globalStore.cooperado?.nomeCompleto}!',
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,

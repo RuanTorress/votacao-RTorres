@@ -57,20 +57,30 @@ mixin _$VotingStore on _VotingStoreBase, Store {
     });
   }
 
-  late final _$selectedVotesAtom =
-      Atom(name: '_VotingStoreBase.selectedVotes', context: context);
+  late final _$votosSelecionadosAtom =
+      Atom(name: '_VotingStoreBase.votosSelecionados', context: context);
 
   @override
-  ObservableMap<int, String?> get selectedVotes {
-    _$selectedVotesAtom.reportRead();
-    return super.selectedVotes;
+  ObservableMap<int, List<String>> get votosSelecionados {
+    _$votosSelecionadosAtom.reportRead();
+    return super.votosSelecionados;
   }
 
   @override
-  set selectedVotes(ObservableMap<int, String?> value) {
-    _$selectedVotesAtom.reportWrite(value, super.selectedVotes, () {
-      super.selectedVotes = value;
+  set votosSelecionados(ObservableMap<int, List<String>> value) {
+    _$votosSelecionadosAtom.reportWrite(value, super.votosSelecionados, () {
+      super.votosSelecionados = value;
     });
+  }
+
+  late final _$confirmarVotoAsyncAction =
+      AsyncAction('_VotingStoreBase.confirmarVoto', context: context);
+
+  @override
+  Future<void> confirmarVoto(
+      {required int pautaId, required List<String> votos}) {
+    return _$confirmarVotoAsyncAction
+        .run(() => super.confirmarVoto(pautaId: pautaId, votos: votos));
   }
 
   late final _$loadPautasAsyncAction =
@@ -85,11 +95,13 @@ mixin _$VotingStore on _VotingStoreBase, Store {
       ActionController(name: '_VotingStoreBase', context: context);
 
   @override
-  void selectVote(int pautaId, String vote) {
+  void selecionarVoto(int pautaId, String voto,
+      {bool multiplaEscolha = false}) {
     final _$actionInfo = _$_VotingStoreBaseActionController.startAction(
-        name: '_VotingStoreBase.selectVote');
+        name: '_VotingStoreBase.selecionarVoto');
     try {
-      return super.selectVote(pautaId, vote);
+      return super
+          .selecionarVoto(pautaId, voto, multiplaEscolha: multiplaEscolha);
     } finally {
       _$_VotingStoreBaseActionController.endAction(_$actionInfo);
     }
@@ -101,7 +113,7 @@ mixin _$VotingStore on _VotingStoreBase, Store {
 pautas: ${pautas},
 isLoading: ${isLoading},
 error: ${error},
-selectedVotes: ${selectedVotes}
+votosSelecionados: ${votosSelecionados}
     ''';
   }
 }
