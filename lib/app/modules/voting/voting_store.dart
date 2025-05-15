@@ -32,6 +32,10 @@ abstract class _VotingStoreBase with Store {
   ObservableMap<int, List<String>> votosSelecionados =
       ObservableMap<int, List<String>>();
 
+  @observable
+  ObservableMap<int, List<String>> votosEnviados =
+      ObservableMap<int, List<String>>();
+
   @action
   Future<void> confirmarVoto({
     required int pautaId,
@@ -103,44 +107,81 @@ abstract class _VotingStoreBase with Store {
   }
 
   @action
-Future<void> confirmarTodosVotos() async {
-  List<String> falhas = [];
+  Future<void> confirmarTodosVotos() async {
+    List<String> falhas = [];
 
-  for (var entry in votosSelecionados.entries) {
-    final pautaId = entry.key;
-    final votos = entry.value;
+    for (var entry in votosSelecionados.entries) {
+      final pautaId = entry.key;
+      final votos = entry.value;
 
-    try {
-      final ip = await _service.getIp();
-      final location = await _service.getGeolocation();
-      final now = DateTime.now();
+      try {
+        final ip = await _service.getIp();
+        final location = await _service.getGeolocation();
+        final now = DateTime.now();
 
-      final voto = VotoModel(
-        pautaId: pautaId,
-        votos: votos,
-        ip: ip,
-        dataHora: now,
-        geolocalizacao: location,
-        cooperadoId: globalStore.cooperado!.id,
-        cooperadoName: globalStore.cooperado!.nomeCompleto,
-      );
+        final voto = VotoModel(
+          pautaId: pautaId,
+          votos: votos,
+          ip: ip,
+          dataHora: now,
+          geolocalizacao: location,
+          cooperadoId: globalStore.cooperado!.id,
+          cooperadoName: globalStore.cooperado!.nomeCompleto,
+        );
 
-      final result = await _service.registrarVoto(voto.toJson());
+        final result = await _service.registrarVoto(voto.toJson());
 
-      if (!result.success) {
-        falhas.add('Pauta $pautaId: ${result.message}');
+        if (!result.success) {
+          falhas.add('Pauta $pautaId: ${result.message}');
+        }
+
+        print('📤 Voto JSON: ${jsonEncode(voto.toJson())}');
+      } catch (e) {
+        falhas.add('Pauta $pautaId: erro inesperado');
       }
+    }
 
-      print('📤 Voto JSON: ${jsonEncode(voto.toJson())}');
-    } catch (e) {
-      falhas.add('Pauta $pautaId: erro inesperado');
+    votosSelecionados.clear();
+
+    if (falhas.isNotEmpty) {
+      throw Exception(falhas.join('\n'));
     }
   }
 
-  votosSelecionados.clear();
+  @action
+Future<void> loadVotosEnviados() async {
+  final id = globalStore.cooperado!.id;
+  final result = await _service.getVotosPorCooperado(id);
 
-  if (falhas.isNotEmpty) {
-    throw Exception(falhas.join('\n'));
+  if (result.success && result.data != null) {
+    for (final item in result.data!) {
+      final pautaId = item['pauta_id'];
+      final resposta = item['votos']['resposta'];
+
+      if (resposta is List) {
+        votosEnviados[pautaId] = List<String>.from(resposta);
+      } else {
+        votosEnviados[pautaId] = [resposta.toString()];
+      }
+    }
+  } else {
+    print('❌ Erro ao carregar votos enviados: ${result.message}');
   }
+}
+
+bool get votouEmTodasAsPautas {
+  final totalPautas = pautas.length;
+  final votadas = votosSelecionados.keys.length + votosEnviados.keys.length;
+  return votadas >= totalPautas;
+}
+
+int? get primeiraPautaNaoVotadaId {
+  for (final pauta in pautas) {
+    if (!votosSelecionados.containsKey(pauta.id) &&
+        !votosEnviados.containsKey(pauta.id)) {
+      return pauta.id;
+    }
+  }
+  return null;
 }
 }

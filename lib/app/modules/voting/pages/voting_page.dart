@@ -15,10 +15,13 @@ class VotingPage extends StatefulWidget {
 class _VotingPageState extends State<VotingPage> {
   final store = Modular.get<VotingStore>();
 
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     store.loadPautas();
+    store.loadVotosEnviados();
   }
 
   @override
@@ -41,6 +44,7 @@ class _VotingPageState extends State<VotingPage> {
             children: [
               Expanded(
                 child: ListView.builder(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(16),
                   itemCount: pautas.length,
                   itemBuilder: (_, index) {
@@ -76,6 +80,8 @@ class _VotingPageState extends State<VotingPage> {
                           if (confirm == true) {
                             try {
                               await store.confirmarTodosVotos();
+                              store.votosSelecionados.clear();
+                              await store.loadVotosEnviados();
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -96,7 +102,29 @@ class _VotingPageState extends State<VotingPage> {
                             }
                           }
                         }
-                      : null,
+                      : () {
+                          final id = store.primeiraPautaNaoVotadaId;
+                          if (id != null) {
+                            final index =
+                                store.pautas.indexWhere((p) => p.id == id);
+                            if (index >= 0) {
+                              _scrollController.animateTo(
+                                index *
+                                    300.0, // depende da altura média do card
+                                duration: const Duration(milliseconds: 600),
+                                curve: Curves.easeInOut,
+                              );
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      '⚠️ Você ainda não votou em todas as pautas.'),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                            }
+                          }
+                        },
                   icon: const Icon(Icons.check_circle_outline),
                   label: const Text('Confirmar Todos os Votos'),
                   style: ElevatedButton.styleFrom(
@@ -113,6 +141,21 @@ class _VotingPageState extends State<VotingPage> {
                   ),
                 ),
               ),
+              // TextButton(
+              //   onPressed: () async {
+              //     final result = await store.testarVotoUnico();
+
+              //     ScaffoldMessenger.of(context).showSnackBar(
+              //       SnackBar(
+              //         content: Text(result.success
+              //             ? '✅ Voto registrado com sucesso'
+              //             : '❌ ${result.message}'),
+              //         backgroundColor: result.success ? Colors.green : Colors.red,
+              //       ),
+              //     );
+              //   },
+              //   child: const Text('Testar Voto Único'),
+              // ),
             ],
           );
         },
@@ -123,7 +166,11 @@ class _VotingPageState extends State<VotingPage> {
   Widget _buildPautaCard(PautaModel pauta) {
     return Observer(
       builder: (_) {
-        final votoSelecionado = store.votosSelecionados[pauta.id];
+        final pautaId = pauta.id;
+        final jaVotou = store.votosEnviados.containsKey(pautaId);
+        final selecionados = jaVotou
+            ? store.votosEnviados[pautaId]!
+            : store.votosSelecionados[pautaId] ?? [];
 
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 10),
@@ -192,14 +239,24 @@ class _VotingPageState extends State<VotingPage> {
                 runSpacing: 10,
                 children: [
                   _voteButton('Aprovo', const Color(0xFF4CAF50), pauta.id!,
-                      pauta.respostaMultipla ?? false),
+                      pauta.respostaMultipla ?? false, jaVotou, selecionados),
                   _voteButton('Reprovo', const Color(0xFFF44336), pauta.id!,
-                      pauta.respostaMultipla ?? false),
+                      pauta.respostaMultipla ?? false, jaVotou, selecionados),
                   _voteButton('Abstenho', const Color(0xFF9E9E9E), pauta.id!,
-                      pauta.respostaMultipla ?? false),
+                      pauta.respostaMultipla ?? false, jaVotou, selecionados),
                 ],
               ),
-              const SizedBox(height: 16),
+              if (jaVotou)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    '✔ Você já votou nesta pauta.',
+                    style: TextStyle(
+                      color: Colors.green.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                )
             ],
           ),
         ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05);
@@ -208,13 +265,20 @@ class _VotingPageState extends State<VotingPage> {
   }
 
   Widget _voteButton(
-      String label, Color color, int pautaId, bool multiplaEscolha) {
-    final selecionados = store.votosSelecionados[pautaId] ?? [];
+    String label,
+    Color color,
+    int pautaId,
+    bool multiplaEscolha,
+    bool jaVotou,
+    List<String> selecionados,
+  ) {
     final isSelecionado = selecionados.contains(label);
 
     return OutlinedButton(
-      onPressed: () => store.selecionarVoto(pautaId, label,
-          multiplaEscolha: multiplaEscolha),
+      onPressed: jaVotou
+          ? null
+          : () => store.selecionarVoto(pautaId, label,
+              multiplaEscolha: multiplaEscolha),
       style: OutlinedButton.styleFrom(
         side: BorderSide(color: isSelecionado ? color : color.withOpacity(0.5)),
         backgroundColor:

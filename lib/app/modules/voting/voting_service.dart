@@ -76,4 +76,23 @@ class VotingService {
       return ServiceResponse(success: false, message: 'Erro de conexão: $e');
     }
   }
+
+  Future<ServiceResponse<List<Map<String, dynamic>>>> getVotosPorCooperado(int cooperadoId) async {
+  final url = Uri.parse('$baseUrl/votos/cooperado/$cooperadoId');
+
+  try {
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> body = jsonDecode(response.body);
+      return ServiceResponse(success: true, data: body.cast<Map<String, dynamic>>());
+    } else if (response.statusCode == 404) {
+      return ServiceResponse(success: true, data: []); // nenhum voto, mas não erro
+    } else {
+      return ServiceResponse(success: false, message: 'Erro ao buscar votos: ${response.statusCode}');
+    }
+  } catch (e) {
+    return ServiceResponse(success: false, message: 'Erro de conexão: $e');
+  }
+}
 }
