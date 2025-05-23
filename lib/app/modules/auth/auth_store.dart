@@ -27,8 +27,10 @@ abstract class _AuthStoreBase with Store {
   Future<bool> fetchCooperado(String login) async {
     isLoading = true;
     error = null;
+      // Garante que o login comece com "UGGO"
+  final normalizedLogin = login.startsWith('UGGO') ? login : 'UGGO$login';
 
-    final result = await _authServices.getCooperadoByLogin(login);
+    final result = await _authServices.getCooperadoByLogin(normalizedLogin);
 
     if (result.success && result.data != null && result.data!.isNotEmpty) {
       final cooperado = result.data!.first;

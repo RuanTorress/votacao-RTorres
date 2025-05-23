@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:votacao_uniodonto/app/modules/voting/models/pauta_model.dart';
 import 'package:votacao_uniodonto/app/modules/voting/voting_store.dart';
+import 'package:votacao_uniodonto/app/global_store.dart';
 
 class VotingPage extends StatefulWidget {
   const VotingPage({super.key});
@@ -14,14 +15,27 @@ class VotingPage extends StatefulWidget {
 
 class _VotingPageState extends State<VotingPage> {
   final store = Modular.get<VotingStore>();
-
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    store.loadPautas();
-    store.loadVotosEnviados();
+
+    final cooperado = Modular.get<GlobalStore>().cooperado;
+    if (cooperado == null || cooperado.id == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cooperado não encontrado. Faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Modular.to.navigate('/');
+      });
+    } else {
+      store.loadPautas();
+      store.loadVotosEnviados();
+    }
   }
 
   @override
@@ -56,22 +70,73 @@ class _VotingPageState extends State<VotingPage> {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: ElevatedButton.icon(
-                  onPressed: store.votosSelecionados.isNotEmpty
+                  onPressed: store.todosVotosSelecionados
                       ? () async {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (ctx) => AlertDialog(
-                              title: const Text('Confirmar Votos'),
-                              content: const Text(
-                                  'Você tem certeza? Esta ação irá registrar todos os votos.'),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              titlePadding:
+                                  const EdgeInsets.fromLTRB(24, 24, 24, 12),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 16),
+                              actionsPadding:
+                                  const EdgeInsets.only(bottom: 16, right: 16),
+                              title: Row(
+                                children: const [
+                                  Icon(Icons.verified_user_rounded,
+                                      color: Color(0xFF9F2E75)),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'Autorização Final de Voto',
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Text(
+                                    'Ao prosseguir, você autoriza a assinatura digital do seu conjunto de votos para esta Assembleia Geral Ordinária.',
+                                    textAlign: TextAlign.justify,
+                                    style: TextStyle(fontSize: 15),
+                                  ),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    'Essa assinatura criptográfica é única e vinculada à sua identidade como cooperado(a), garantindo integridade, autenticidade e validade jurídica do registro.',
+                                    textAlign: TextAlign.justify,
+                                    style: TextStyle(
+                                        fontSize: 13, color: Colors.black54),
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Após confirmada, esta ação não poderá ser desfeita.',
+                                    style: TextStyle(
+                                        color: Colors.redAccent,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ],
+                              ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.of(ctx).pop(false),
                                   child: const Text('Cancelar'),
                                 ),
-                                ElevatedButton(
+                                ElevatedButton.icon(
                                   onPressed: () => Navigator.of(ctx).pop(true),
-                                  child: const Text('Confirmar'),
+                                  icon: const Icon(Icons.lock_outline),
+                                  label: const Text('Assinar e Confirmar'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF9F2E75),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 12),
+                                    textStyle: const TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                               ],
                             ),
@@ -79,16 +144,17 @@ class _VotingPageState extends State<VotingPage> {
 
                           if (confirm == true) {
                             try {
+                              final votosConfirmados =
+                                  Map<int, List<String>>.from(
+                                      store.votosSelecionados);
+
                               await store.confirmarTodosVotos();
                               store.votosSelecionados.clear();
                               await store.loadVotosEnviados();
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      '✅ Todos os votos foram registrados!'),
-                                  backgroundColor: Colors.green,
-                                ),
+                              Modular.to.pushNamed(
+                                '/votacao/confirmacao',
+                                arguments: votosConfirmados,
                               );
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -103,27 +169,30 @@ class _VotingPageState extends State<VotingPage> {
                           }
                         }
                       : () {
-                          final id = store.primeiraPautaNaoVotadaId;
-                          if (id != null) {
-                            final index =
-                                store.pautas.indexWhere((p) => p.id == id);
-                            if (index >= 0) {
-                              _scrollController.animateTo(
-                                index *
-                                    300.0, // depende da altura média do card
-                                duration: const Duration(milliseconds: 600),
-                                curve: Curves.easeInOut,
-                              );
+                          final id = store.pautas
+                              .firstWhere(
+                                (p) =>
+                                    !store.votosSelecionados.containsKey(p.id),
+                                orElse: () => store.pautas.first,
+                              )
+                              .id;
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      '⚠️ Você ainda não votou em todas as pautas.'),
-                                  backgroundColor: Colors.orange,
-                                ),
-                              );
-                            }
-                          }
+                          final index =
+                              store.pautas.indexWhere((p) => p.id == id);
+
+                          _scrollController.animateTo(
+                            index * 300.0,
+                            duration: const Duration(milliseconds: 600),
+                            curve: Curves.easeInOut,
+                          );
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  '⚠️ Você precisa votar em todas as pautas.'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
                         },
                   icon: const Icon(Icons.check_circle_outline),
                   label: const Text('Confirmar Todos os Votos'),
@@ -141,21 +210,6 @@ class _VotingPageState extends State<VotingPage> {
                   ),
                 ),
               ),
-              // TextButton(
-              //   onPressed: () async {
-              //     final result = await store.testarVotoUnico();
-
-              //     ScaffoldMessenger.of(context).showSnackBar(
-              //       SnackBar(
-              //         content: Text(result.success
-              //             ? '✅ Voto registrado com sucesso'
-              //             : '❌ ${result.message}'),
-              //         backgroundColor: result.success ? Colors.green : Colors.red,
-              //       ),
-              //     );
-              //   },
-              //   child: const Text('Testar Voto Único'),
-              // ),
             ],
           );
         },

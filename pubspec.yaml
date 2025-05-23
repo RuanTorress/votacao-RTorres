@@ -48,6 +48,9 @@ dependencies:
   flutter_masked_text2: ^0.9.1
   flutter_animate: ^4.5.2
   shared_preferences: ^2.5.3
+  intl: ^0.20.2
+  cryptography: ^2.7.0
+  flutter_secure_storage: ^9.2.4
   
 
 dev_dependencies:

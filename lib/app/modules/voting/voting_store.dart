@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:mobx/mobx.dart';
 import 'package:votacao_uniodonto/app/global_store.dart';
@@ -18,6 +19,9 @@ abstract class _VotingStoreBase with Store {
 
   @observable
   ObservableList<PautaModel> pautas = ObservableList<PautaModel>();
+
+    @observable
+  int? interactionId;
 
   @observable
   bool isLoading = false;
@@ -82,22 +86,51 @@ abstract class _VotingStoreBase with Store {
     votosSelecionados[pautaId] = [...votos];
   }
 
+  /// 1) chama a API de “open” e armazena o id retornado
+  @action
+  Future<void> registrarInteracaoOpen() async {
+    try {
+      final cooperadoId = globalStore.cooperado!.id!;
+      final ip = await _service.getIp();
+      final geo = await _service.getGeolocation();
+      final resp = await _service.openInteraction(
+        cooperadoId: cooperadoId,
+        ip: ip,
+        latitude: geo['latitude'],
+        longitude: geo['longitude'],
+      );
+      if (resp.success && resp.data != null) {
+        interactionId = resp.data;
+      }
+    } catch (e) {
+      debugPrint('Erro ao abrir interação: $e');
+    }
+  }
+
+  /// 2) chama a API de “complete” usando o id que salvamos antes
+  @action
+  Future<void> registrarInteracaoComplete() async {
+    if (interactionId == null) return;
+    final resp = await _service.completeInteraction(interactionId!);
+    if (!resp.success) {
+      debugPrint('Falha ao concluir interação: ${resp.message}');
+    }
+  }
+
   @action
   Future<void> loadPautas() async {
     isLoading = true;
     error = null;
-
     try {
       final resultado = await _service.getPautas();
-
-      print('✅ Resultado: ${resultado.data}');
-
       if (resultado.success && resultado.data != null) {
         pautas
           ..clear()
-          ..addAll(resultado.data!); // ✅ funciona com ObservableList
+          ..addAll(resultado.data!);
+        // assim que carregar as pautas, registramos a “open”
+        await registrarInteracaoOpen();
       } else {
-        error = resultado.message ?? 'Erro desconhecido ao carregar pautas';
+        error = resultado.message;
       }
     } catch (e) {
       error = 'Erro de conexão: $e';
@@ -129,7 +162,8 @@ abstract class _VotingStoreBase with Store {
           cooperadoName: globalStore.cooperado!.nomeCompleto,
         );
 
-        final result = await _service.registrarVoto(voto.toJson());
+        final result = await _service.registrarVotoAssinado(voto.toJson());
+        await registrarInteracaoComplete();
 
         if (!result.success) {
           falhas.add('Pauta $pautaId: ${result.message}');
@@ -184,4 +218,9 @@ int? get primeiraPautaNaoVotadaId {
   }
   return null;
 }
+
+bool get todosVotosSelecionados {
+  return votosSelecionados.length == pautas.length;
+}
+
 }

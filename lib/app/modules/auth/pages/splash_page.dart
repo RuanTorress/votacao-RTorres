@@ -22,15 +22,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    super.initState();   
-
-    // param = Modular.args.params['cooperado'];
-
-    // if (param != null) {
-      store.fetchCooperado('UGGO1241');
-    // }
-
-
+    super.initState();     
+    
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
