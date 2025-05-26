@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:votacao_uniodonto/app/modules/auth/auth_store.dart';
-import 'package:votacao_uniodonto/app/modules/auth/models/cooperado_models.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});

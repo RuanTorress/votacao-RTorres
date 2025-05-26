@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:mobx/mobx.dart';
 import 'package:votacao_uniodonto/app/modules/voting/models/pauta_model.dart';
 import 'package:votacao_uniodonto/app/modules/voting/voting_store.dart';
 import 'package:votacao_uniodonto/app/global_store.dart';
@@ -16,27 +17,44 @@ class VotingPage extends StatefulWidget {
 class _VotingPageState extends State<VotingPage> {
   final store = Modular.get<VotingStore>();
   final ScrollController _scrollController = ScrollController();
+  late final ReactionDisposer _votedDisposer;
 
-  @override
-  void initState() {
-    super.initState();
+@override
+void initState() {
+  super.initState();
 
-    final cooperado = Modular.get<GlobalStore>().cooperado;
-    if (cooperado == null || cooperado.id == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cooperado não encontrado. Faça login novamente.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        Modular.to.navigate('/');
+  final cooperado = Modular.get<GlobalStore>().cooperado;
+  if (cooperado == null || cooperado.id == null) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cooperado não encontrado. Faça login novamente.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Modular.to.navigate('/');
+    });
+  } else {
+    // Carrega pautas e votos, e só depois faz o teste de redirecionamento
+    store.votosEnviados.clear();
+    store.loadPautas()
+      .then((_) => store.loadVotosEnviados())
+      .then((_) {
+        // Agora sim, depois de tudo carregado...
+        if (store.todosVotosSelecionados || store.votosEnviados.isNotEmpty) {
+          final votosConfirmados = Map<int, List<String>>.from(store.votosEnviados);
+          Modular.to.pushReplacementNamed(
+            '/votacao/confirmacao',
+            arguments: votosConfirmados,
+          );
+        }
+      })
+      .catchError((e) {
+        // opcional: lide com erros de rede/carregamento aqui
+        print('Erro ao carregar dados iniciais: $e');
       });
-    } else {
-      store.loadPautas();
-      store.loadVotosEnviados();
-    }
   }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -40,6 +40,7 @@ abstract class _VotingStoreBase with Store {
   ObservableMap<int, List<String>> votosEnviados =
       ObservableMap<int, List<String>>();
 
+
   @action
   Future<void> confirmarVoto({
     required int pautaId,
@@ -201,6 +202,15 @@ Future<void> loadVotosEnviados() async {
   } else {
     print('❌ Erro ao carregar votos enviados: ${result.message}');
   }
+}
+
+@action
+Future<void> limparVotosSelecionados()async{
+  votosSelecionados.clear();
+  votosPendentes.clear();
+  votosEnviados.clear();
+  globalStore.cooperado = null;
+  
 }
 
 bool get votouEmTodasAsPautas {

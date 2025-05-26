@@ -3,7 +3,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:intl/intl.dart';
-import 'package:votacao_uniodonto/app/global_store.dart';
+import 'package:votacao_uniodonto/app/modules/voting/voting_store.dart';
 import 'package:votacao_uniodonto/app/shared/crypto_service.dart';
 
 class VotingConfirmationPage extends StatefulWidget {
@@ -44,7 +44,7 @@ class _VotingConfirmationPageState extends State<VotingConfirmationPage> {
   }
 
   Future<String> getChavePublica() async {
-    return await CryptoService().getPublicKeyBase64() ?? 'Indisponível';
+    return await CryptoService().getPublicKeyBase64() ?? '**-CHAVE RESTRITA PARA USO INTERNO-**';
   }
 
   @override
@@ -186,7 +186,11 @@ class _VotingConfirmationPageState extends State<VotingConfirmationPage> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16),
         child: ElevatedButton(
-          onPressed: () => Modular.to.navigate('/'),
+          onPressed: () async{
+            // Limpa os votos selecionados
+           await VotingStore().limparVotosSelecionados();
+            Modular.to.navigate('/');
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF9F2E75),
             foregroundColor: Colors.white,

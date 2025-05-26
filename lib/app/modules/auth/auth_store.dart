@@ -2,7 +2,6 @@ import 'package:flutter_modular/flutter_modular.dart';
 import 'package:mobx/mobx.dart';
 import 'package:votacao_uniodonto/app/modules/auth/auth_service.dart';
 import 'package:votacao_uniodonto/app/global_store.dart';
-import 'package:votacao_uniodonto/app/modules/auth/models/cooperado_models.dart';
 
 part 'auth_store.g.dart';
 
