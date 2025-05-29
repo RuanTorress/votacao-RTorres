@@ -24,7 +24,7 @@ void initState() {
   super.initState();
 
   final cooperado = Modular.get<GlobalStore>().cooperado;
-  if (cooperado == null || cooperado.id == null) {
+  if (cooperado == null) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -310,11 +310,11 @@ void initState() {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  _voteButton('Aprovo', const Color(0xFF4CAF50), pauta.id!,
+                  _voteButton('Aprovo', const Color(0xFF4CAF50), pauta.id,
                       pauta.respostaMultipla ?? false, jaVotou, selecionados),
-                  _voteButton('Reprovo', const Color(0xFFF44336), pauta.id!,
+                  _voteButton('Reprovo', const Color(0xFFF44336), pauta.id,
                       pauta.respostaMultipla ?? false, jaVotou, selecionados),
-                  _voteButton('Abstenho', const Color(0xFF9E9E9E), pauta.id!,
+                  _voteButton('Abstenho', const Color(0xFF9E9E9E), pauta.id,
                       pauta.respostaMultipla ?? false, jaVotou, selecionados),
                 ],
               ),

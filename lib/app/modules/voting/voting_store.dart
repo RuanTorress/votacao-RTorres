@@ -91,7 +91,7 @@ abstract class _VotingStoreBase with Store {
   @action
   Future<void> registrarInteracaoOpen() async {
     try {
-      final cooperadoId = globalStore.cooperado!.id!;
+      final cooperadoId = globalStore.cooperado!.id;
       final ip = await _service.getIp();
       final geo = await _service.getGeolocation();
       final resp = await _service.openInteraction(

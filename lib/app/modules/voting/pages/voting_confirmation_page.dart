@@ -156,7 +156,7 @@ class _VotingConfirmationPageState extends State<VotingConfirmationPage> {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
                 const SizedBox(height: 12),
                 const Text('🔐 Chave Pública do Cooperado:',
                     style: TextStyle(fontWeight: FontWeight.w600)),

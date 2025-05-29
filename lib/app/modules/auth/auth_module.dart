@@ -1,5 +1,4 @@
 import 'package:flutter_modular/flutter_modular.dart';
-import 'package:votacao_uniodonto/app/global_store.dart';
 import 'package:votacao_uniodonto/app/modules/auth/auth_store.dart';
 import 'package:votacao_uniodonto/app/modules/auth/pages/otp_page.dart';
 import 'pages/splash_page.dart';

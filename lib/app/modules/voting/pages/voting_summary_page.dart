@@ -23,7 +23,7 @@ class _VotingSummaryPageState extends State<VotingSummaryPage> {
   void initState() {
     super.initState();
     final cooperado = Modular.get<GlobalStore>().cooperado;
-    if (cooperado == null || cooperado.id == null) {
+    if (cooperado == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

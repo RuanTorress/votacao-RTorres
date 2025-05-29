@@ -15,7 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   AuthStore store = Modular.get<AuthStore>();
   final GlobalStore globalStore = Modular.get<GlobalStore>();
 
-  TextEditingController _croController = TextEditingController();
+  final TextEditingController _croController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
