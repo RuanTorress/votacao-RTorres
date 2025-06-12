@@ -1,36 +1,56 @@
 class PautaModel {
   final int id;
+  final int numeroPauta;
   final String titulo;
   final String descricao;
-  final String tipo;
-  final DateTime dataInicio;
-  final DateTime dataFim;
-  final bool respostaMultipla;
+  final int assembleiaId;
+  final bool respostaEditavel;
+  final List<String> respostas;
+  final bool multiplaEscolha;
+  final DateTime createdAt;
 
   PautaModel({
     required this.id,
+    required this.numeroPauta,
     required this.titulo,
     required this.descricao,
-    required this.tipo,
-    required this.dataInicio,
-    required this.dataFim,
-    required this.respostaMultipla,
+    required this.assembleiaId,
+    required this.respostaEditavel,
+    required this.respostas,
+    required this.multiplaEscolha,
+    required this.createdAt,
   });
 
   factory PautaModel.fromJson(Map<String, dynamic> json) {
     return PautaModel(
       id: json['id'],
+      numeroPauta: json['numero_pauta'],
       titulo: json['titulo'],
       descricao: json['descricao'],
-      tipo: json['tipo'],
-      dataInicio: DateTime.parse(json['data_inicio']),
-      dataFim: DateTime.parse(json['data_fim']),
-      respostaMultipla: json['resposta_multipla'],
+      assembleiaId: json['assembleia_id'],
+      respostaEditavel: json['resposta_editavel'],
+      respostas: List<String>.from(json['respostas'] ?? []),
+      multiplaEscolha: json['multipla_escolha'] ?? false,
+      createdAt: DateTime.parse(json['created_at']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'numero_pauta': numeroPauta,
+      'titulo': titulo,
+      'descricao': descricao,
+      'assembleia_id': assembleiaId,
+      'resposta_editavel': respostaEditavel,
+      'respostas': respostas,
+      'multipla_escolha': multiplaEscolha,
+      'created_at': createdAt.toIso8601String(),
+    };
   }
 
   @override
   String toString() {
-    return 'PautaModel(id: $id, titulo: $titulo)';
+    return 'PautaModel(id: $numeroPauta, titulo: $titulo)';
   }
 }

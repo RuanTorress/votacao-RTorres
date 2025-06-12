@@ -64,9 +64,21 @@ class _OtpPageState extends State<OtpPage> {
                   const SizedBox(height: 16),
 
                   Text(
-                    'Enviamos um código para o número:\n${globalStore.cooperado?.celular ?? '---'}',
+                    'Enviamos um código para o número:\n${globalStore.cooperado?.celular ?? 'SEM TELEFONE CADASTRADO'}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 16),
+                  ).animate().fadeIn().slideY(begin: 0.3),
+
+                  const SizedBox(height: 12),
+
+                  const Text(
+                    '⚠️ Se você não tem acesso ao telefone informado, por favor entre em contato com a DRC.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.redAccent,
+                    ),
                   ).animate().fadeIn().slideY(begin: 0.3),
 
                   const SizedBox(height: 24),
@@ -77,7 +89,7 @@ class _OtpPageState extends State<OtpPage> {
                     textAlign: TextAlign.center,
                     maxLength: 6,
                     decoration: InputDecoration(
-                      hintText: 'Digite o código (ex: 1234)',
+                      hintText: 'Digite o código (ex: 123456)',
                       counterText: '',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -96,7 +108,7 @@ class _OtpPageState extends State<OtpPage> {
                               final success =
                                   await store.verifyCode(_codeController.text);
                               if (success) {
-                                Modular.to.navigate('/votacao'); // ajuste depois
+                                Modular.to.navigate('/votacao');
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -109,7 +121,8 @@ class _OtpPageState extends State<OtpPage> {
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF9F2E75),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),

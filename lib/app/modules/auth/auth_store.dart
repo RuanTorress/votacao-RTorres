@@ -1,7 +1,12 @@
+import 'dart:convert';
+
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:mobx/mobx.dart';
 import 'package:votacao_uniodonto/app/modules/auth/auth_service.dart';
 import 'package:votacao_uniodonto/app/global_store.dart';
+import 'package:votacao_uniodonto/app/shared/jwt_class.dart';
 
 part 'auth_store.g.dart';
 
@@ -42,6 +47,29 @@ abstract class _AuthStoreBase with Store {
       return false;
     }
   }
+
+@action
+Future<bool> handleCoopLogin(String login, String password) async {
+  try {
+    final normalizedLogin = login.startsWith('UGGO') ? login : 'UGGO$login';
+    const key = 'hmacKey';
+    final passwordEncoded = utf8.encode(password);
+    final keyEncoded = utf8.encode(key);
+    final hmacSha256 = Hmac(sha256, keyEncoded);
+    final digest = hmacSha256.convert(passwordEncoded);
+    final token = JwtSign().getToken({
+      "user": normalizedLogin,
+      "senha": digest.toString(),
+    });
+    final resultLogin = await _authServices.coopLogin(token);
+    if (resultLogin.success) {
+      return true;
+    }
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
 
   // ======================
   // 📲 Envio e verificação de código SMS

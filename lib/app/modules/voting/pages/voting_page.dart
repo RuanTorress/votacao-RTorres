@@ -17,44 +17,42 @@ class VotingPage extends StatefulWidget {
 class _VotingPageState extends State<VotingPage> {
   final store = Modular.get<VotingStore>();
   final ScrollController _scrollController = ScrollController();
-  late final ReactionDisposer _votedDisposer;
 
-@override
-void initState() {
-  super.initState();
+  @override
+  void initState() {
+    super.initState();
 
-  final cooperado = Modular.get<GlobalStore>().cooperado;
-  if (cooperado == null) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cooperado não encontrado. Faça login novamente.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      Modular.to.navigate('/');
-    });
-  } else {
-    // Carrega pautas e votos, e só depois faz o teste de redirecionamento
-    store.votosEnviados.clear();
-    store.loadPautas()
-      .then((_) => store.loadVotosEnviados())
-      .then((_) {
-        // Agora sim, depois de tudo carregado...
-        if (store.todosVotosSelecionados || store.votosEnviados.isNotEmpty) {
-          final votosConfirmados = Map<int, List<String>>.from(store.votosEnviados);
-          Modular.to.pushReplacementNamed(
-            '/votacao/confirmacao',
-            arguments: votosConfirmados,
-          );
-        }
-      })
-      .catchError((e) {
-        // opcional: lide com erros de rede/carregamento aqui
-        print('Erro ao carregar dados iniciais: $e');
+    final cooperado = Modular.get<GlobalStore>().cooperado;
+    if (cooperado == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cooperado não encontrado. Faça login novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Modular.to.navigate('/');
       });
+     } else {
+      // Carrega pautas e votos, e só depois faz o teste de redirecionamento
+      store.votosEnviados.clear();
+      store.loadPautas()
+        .then((_) => store.loadVotosEnviados())
+        .then((_) {
+          // Depois de carregado, se já votou em todas ou tem votos enviados
+          if (store.todosVotosSelecionados || store.votosEnviados.isNotEmpty) {
+            final votosConfirmados = Map<int, List<String>>.from(store.votosEnviados);
+            Modular.to.pushReplacementNamed(
+              '/votacao/confirmacao',
+              arguments: votosConfirmados,
+            );
+          }
+        })
+        .catchError((e) {
+          print('Erro ao carregar dados iniciais: $e');
+        });
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -62,15 +60,12 @@ void initState() {
       appBar: _buildCustomAppBar(),
       body: Observer(
         builder: (_) {
-          if (store.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          if (store.isLoading) return const Center(child: CircularProgressIndicator());
+          if (store.error != null) return Center(child: Text(store.error!));
 
-          if (store.error != null) {
-            return Center(child: Text(store.error!));
-          }
-
-          final pautas = store.pautas;
+          // 1) Ordena aqui
+          final pautas = List<PautaModel>.from(store.pautas)
+            ..sort((a, b) => a.numeroPauta.compareTo(b.numeroPauta));
 
           return Column(
             children: [
@@ -92,84 +87,15 @@ void initState() {
                       ? () async {
                           final confirm = await showDialog<bool>(
                             context: context,
-                            builder: (ctx) => AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                              titlePadding:
-                                  const EdgeInsets.fromLTRB(24, 24, 24, 12),
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 16),
-                              actionsPadding:
-                                  const EdgeInsets.only(bottom: 16, right: 16),
-                              title: Row(
-                                children: const [
-                                  Icon(Icons.verified_user_rounded,
-                                      color: Color(0xFF9F2E75)),
-                                  SizedBox(width: 12),
-                                  Text(
-                                    'Autorização Final de Voto',
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Text(
-                                    'Ao prosseguir, você autoriza a assinatura digital do seu conjunto de votos para esta Assembleia Geral Ordinária.',
-                                    textAlign: TextAlign.justify,
-                                    style: TextStyle(fontSize: 15),
-                                  ),
-                                  SizedBox(height: 12),
-                                  Text(
-                                    'Essa assinatura criptográfica é única e vinculada à sua identidade como cooperado(a), garantindo integridade, autenticidade e validade jurídica do registro.',
-                                    textAlign: TextAlign.justify,
-                                    style: TextStyle(
-                                        fontSize: 13, color: Colors.black54),
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    'Após confirmada, esta ação não poderá ser desfeita.',
-                                    style: TextStyle(
-                                        color: Colors.redAccent,
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(ctx).pop(false),
-                                  child: const Text('Cancelar'),
-                                ),
-                                ElevatedButton.icon(
-                                  onPressed: () => Navigator.of(ctx).pop(true),
-                                  icon: const Icon(Icons.lock_outline),
-                                  label: const Text('Assinar e Confirmar'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF9F2E75),
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 20, vertical: 12),
-                                    textStyle: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
-                            ),
+                            builder: (ctx) => _buildConfirmationDialog(ctx),
                           );
-
                           if (confirm == true) {
                             try {
                               final votosConfirmados =
-                                  Map<int, List<String>>.from(
-                                      store.votosSelecionados);
-
+                                  Map<int, List<String>>.from(store.votosSelecionados);
                               await store.confirmarTodosVotos();
                               store.votosSelecionados.clear();
                               await store.loadVotosEnviados();
-
                               Modular.to.pushNamed(
                                 '/votacao/confirmacao',
                                 arguments: votosConfirmados,
@@ -177,8 +103,7 @@ void initState() {
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content:
-                                      Text('❌ Erros ao registrar votos:\n$e'),
+                                  content: Text('❌ Erros ao registrar votos:\n$e'),
                                   backgroundColor: Colors.red,
                                   duration: const Duration(seconds: 6),
                                 ),
@@ -187,27 +112,19 @@ void initState() {
                           }
                         }
                       : () {
-                          final id = store.pautas
-                              .firstWhere(
-                                (p) =>
-                                    !store.votosSelecionados.containsKey(p.id),
-                                orElse: () => store.pautas.first,
-                              )
-                              .id;
-
-                          final index =
-                              store.pautas.indexWhere((p) => p.id == id);
-
+                          final id = pautas.firstWhere(
+                            (p) => !store.votosSelecionados.containsKey(p.id),
+                            orElse: () => pautas.first,
+                          ).id;
+                          final idx = pautas.indexWhere((p) => p.id == id);
                           _scrollController.animateTo(
-                            index * 300.0,
+                            idx * 300.0,
                             duration: const Duration(milliseconds: 600),
                             curve: Curves.easeInOut,
                           );
-
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text(
-                                  '⚠️ Você precisa votar em todas as pautas.'),
+                              content: Text('⚠️ Você precisa votar em todas as pautas.'),
                               backgroundColor: Colors.orange,
                             ),
                           );
@@ -219,11 +136,8 @@ void initState() {
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: Colors.grey.shade300,
                     disabledForegroundColor: Colors.grey.shade600,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     elevation: 3,
                   ),
                 ),
@@ -232,6 +146,70 @@ void initState() {
           );
         },
       ),
+    );
+  }
+
+  AlertDialog _buildConfirmationDialog(BuildContext ctx) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      actionsPadding: const EdgeInsets.only(bottom: 16, right: 16),
+      title: Row(
+        children: [
+          Icon(Icons.verified_user_rounded, color: const Color(0xFF9F2E75), size: 32),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Text(
+              'Autorização Final de Voto',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF9F2E75),
+              ),
+            ),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text(
+            'Ao prosseguir, você autoriza a assinatura digital do seu conjunto de votos para esta Assembleia Geral Ordinária.',
+            textAlign: TextAlign.justify,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Essa assinatura criptográfica é única e vinculada à sua identidade como cooperado(a), garantindo integridade, autenticidade e validade jurídica do registro.',
+            textAlign: TextAlign.justify,
+            style: TextStyle(fontSize: 16, color: Colors.black87),
+          ),
+          SizedBox(height: 20),
+          Text(
+            'Após confirmada, esta ação NÃO poderá ser desfeita.',
+            style: TextStyle(fontSize: 18, color: Colors.redAccent, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Cancelar', style: TextStyle(fontSize: 16)),
+        ),
+        ElevatedButton.icon(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          icon: const Icon(Icons.lock_outline, size: 20),
+          label: const Text('Assinar e Confirmar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF9F2E75),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ],
     );
   }
 
@@ -250,13 +228,7 @@ void initState() {
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFF9F2E75).withOpacity(0.2)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              )
-            ],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
           ),
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -264,16 +236,19 @@ void initState() {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.how_to_vote, color: Color(0xFF9F2E75)),
+                  Text(
+                    '${pauta.numeroPauta}',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF9F2E75),
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       pauta.titulo,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF2B2B2B),
-                      ),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF2B2B2B)),
                     ),
                   ),
                 ],
@@ -281,17 +256,12 @@ void initState() {
               const SizedBox(height: 10),
               Text(
                 pauta.descricao,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF666666),
-                  height: 1.4,
-                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF666666), height: 1.4),
               ),
               const SizedBox(height: 12),
-              if (pauta.respostaMultipla == true)
+              if (pauta.multiplaEscolha)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFF9F2E75).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -309,62 +279,70 @@ void initState() {
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: [
-                  _voteButton('Aprovo', const Color(0xFF4CAF50), pauta.id,
-                      pauta.respostaMultipla ?? false, jaVotou, selecionados),
-                  _voteButton('Reprovo', const Color(0xFFF44336), pauta.id,
-                      pauta.respostaMultipla ?? false, jaVotou, selecionados),
-                  _voteButton('Abstenho', const Color(0xFF9E9E9E), pauta.id,
-                      pauta.respostaMultipla ?? false, jaVotou, selecionados),
-                ],
+                children: pauta.respostas.map((resposta) {
+                  return _voteButton(
+                    resposta,
+                    pautaId,
+                    pauta.multiplaEscolha,
+                    jaVotou,
+                    selecionados,
+                  );
+                }).toList(),
               ),
               if (jaVotou)
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
                     '✔ Você já votou nesta pauta.',
-                    style: TextStyle(
-                      color: Colors.green.shade700,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600),
                   ),
-                )
+                ),
             ],
           ),
-        ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05);
+        )
+        .animate()
+        .fadeIn(duration: 400.ms)
+        .slideY(begin: 0.05);
       },
     );
   }
 
   Widget _voteButton(
     String label,
-    Color color,
     int pautaId,
     bool multiplaEscolha,
     bool jaVotou,
     List<String> selecionados,
   ) {
     final isSelecionado = selecionados.contains(label);
-
     return OutlinedButton(
       onPressed: jaVotou
           ? null
-          : () => store.selecionarVoto(pautaId, label,
-              multiplaEscolha: multiplaEscolha),
+          : () {
+              // 3) Limite de 3 escolhas
+              if (multiplaEscolha && !isSelecionado && selecionados.length >= 3) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Você só pode escolher até 3 opções.'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                return;
+              }
+              store.selecionarVoto(
+                pautaId,
+                label,
+                multiplaEscolha: multiplaEscolha,
+              );
+            },
       style: OutlinedButton.styleFrom(
-        side: BorderSide(color: isSelecionado ? color : color.withOpacity(0.5)),
-        backgroundColor:
-            isSelecionado ? color.withOpacity(0.9) : Colors.transparent,
-        foregroundColor: isSelecionado ? Colors.white : color,
+        side: BorderSide(color: isSelecionado ? const Color(0xFF9F2E75) : const Color(0xFF9F2E75).withOpacity(0.5)),
+        backgroundColor: isSelecionado ? const Color(0xFF9F2E75).withOpacity(0.9) : Colors.transparent,
+        foregroundColor: isSelecionado ? Colors.white : const Color(0xFF9F2E75),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
+      child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
     );
   }
 
@@ -381,18 +359,11 @@ void initState() {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/images/logo_complete.png',
-                  height: 40,
-                ),
+                Image.asset('assets/images/logo_complete.png', height: 40),
                 const SizedBox(width: 16),
                 const Text(
                   'Votação Uniodonto',
-                  style: TextStyle(
-                    color: Color(0xFF9F2E75),
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(color: Color(0xFF9F2E75), fontSize: 26, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -404,11 +375,6 @@ void initState() {
               color: const Color(0xFF9F2E75),
               margin: const EdgeInsets.only(top: 8),
               curve: Curves.easeInOut,
-              child: AnimatedOpacity(
-                opacity: 1.0,
-                duration: const Duration(milliseconds: 700),
-                child: Container(),
-              ),
             ),
           ],
         ),

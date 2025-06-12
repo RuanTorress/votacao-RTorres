@@ -76,7 +76,7 @@ abstract class _VotingStoreBase with Store {
     if (multiplaEscolha) {
       if (votos.contains(voto)) {
         votos.remove(voto);
-      } else if (votos.length < 2) {
+      } else if (votos.length < 3) {
         votos.add(voto);
       }
     } else {

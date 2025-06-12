@@ -71,7 +71,7 @@ class AuthServices {
     //     headers: {'Content-Type': 'application/json'},
     //     body: jsonEncode({'phone': phone}),
     //   );
-
+    //
     //   if (response.statusCode == 200 || response.statusCode == 202) {
     //     return ServiceResponse(success: true);
     //   } else {
@@ -84,7 +84,7 @@ class AuthServices {
     //     } catch (_) {
     //       debugPrint('⚠️ Corpo de erro não é JSON válido');
     //     }
-
+    //
     //     debugPrint('❌ Erro API: $errorMessage');
     //     return ServiceResponse(success: false, message: errorMessage);
     //   }
@@ -96,5 +96,51 @@ class AuthServices {
     //   );
     // }
     return ServiceResponse(success: true);
+  }
+
+  /// Autentica cooperado usando token
+  Future<ServiceResponse<Map<String, dynamic>>> coopLogin(String token) async {
+    final url = Uri.parse('$_baseUrl/usersCoop/handleLogin');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic YXBwQXV0aERldjpqYW4yMDI0',
+        },
+        body: jsonEncode({'token': token}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 202) {
+        final Map<String, dynamic> body = jsonDecode(response.body);
+        return ServiceResponse<Map<String, dynamic>>(
+          success: true,
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      } else {
+        String errorMessage = 'Erro ao autenticar cooperado.';
+        try {
+          final decoded = jsonDecode(response.body);
+          final error = decoded['error'] ?? '';
+          final details = decoded['details'] ?? '';
+          errorMessage = '$error\n$details'.trim();
+        } catch (_) {
+          debugPrint('⚠️ Corpo de erro não é JSON válido');
+        }
+
+        debugPrint('❌ Erro API: $errorMessage');
+        return ServiceResponse<Map<String, dynamic>>(
+          success: false,
+          message: errorMessage,
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Erro de conexão: $e');
+      return ServiceResponse<Map<String, dynamic>>(
+        success: false,
+        message: 'Erro de conexão. Verifique sua rede ou se a API está ativa.',
+      );
+    }
   }
 }

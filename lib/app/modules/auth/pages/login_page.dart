@@ -12,10 +12,11 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  AuthStore store = Modular.get<AuthStore>();
+  final AuthStore store = Modular.get<AuthStore>();
   final GlobalStore globalStore = Modular.get<GlobalStore>();
 
   final TextEditingController _croController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -65,21 +66,8 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   child: Column(
                     children: [
-                      globalStore.cooperado != null
-                          ? Text(
-                              'Olá, ${globalStore.cooperado?.nomeCompleto}!',
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF9F2E75),
-                              ),
-                            )
-                              .animate()
-                              .fadeIn(duration: 800.ms)
-                              .slideY(begin: 0.3)
-                          : SizedBox(),
                       const Text(
-                        'Entrar com seu CRO',
+                        'Entrar com seu CRO e senha',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -89,49 +77,52 @@ class _LoginPageState extends State<LoginPage> {
 
                       const SizedBox(height: 20),
 
-                      // Input
+                      // CRO
                       TextField(
                         controller: _croController,
                         keyboardType: TextInputType.text,
                         decoration: InputDecoration(
                           hintText: 'Digite seu CRO (ex: 12345)',
-                          prefixIcon: const Icon(
-                              Icons.badge), // ou algum ícone tipo identificação
+                          prefixIcon: const Icon(Icons.badge),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.3),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
-                      // Botão
+                      // Senha
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          hintText: 'Digite sua senha',
+                          prefixIcon: const Icon(Icons.lock),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ).animate().fadeIn(delay: 200.ms).slideX(begin: 0.3),
+
+                      const SizedBox(height: 24),
+
+                      // Botão Entrar
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () async {
-                            bool success =
-                                await store.fetchCooperado(_croController.text);
-                            if (success) {
-                              bool codeSent = await store.sendCode();
-
-                              if (codeSent) {
-                                Modular.to.navigate(
-                                    '/otp'); // vai para a tela de verificação
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        store.error ?? 'Erro ao enviar SMS'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
+                            final cro = _croController.text.trim();
+                            final pwd = _passwordController.text;
+                            bool ok = await store.handleCoopLogin(cro, pwd);
+                            if (ok) {
+                              await store.fetchCooperado(cro);
+                              Modular.to.navigate('/votacao');
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(store.error ??
-                                      'Erro ao buscar cooperado'),
+                                  content: Text(
+                                      store.error ?? 'Falha na autenticação'),
                                   backgroundColor: Colors.red,
                                 ),
                               );
@@ -148,11 +139,49 @@ class _LoginPageState extends State<LoginPage> {
                             'Entrar',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Color.fromARGB(255, 255, 255, 255),
+                              color: Colors.white,
                             ),
                           ),
                         ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.3),
                       ),
+
+                      const SizedBox(height: 12),
+
+                      // Esqueci minha senha
+                      TextButton(
+                        onPressed: () async {
+                          final cro = _croController.text.trim();
+                          if (cro.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Por favor, preencha seu CRO.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          // Tenta buscar o cooperado pelo CRO
+                          bool exists = await store.fetchCooperado(cro);
+                          if (exists) {
+                            Modular.to.navigate('/otp');
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content:
+                                    Text('CRO não encontrado'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        child: const Text(
+                          'Esqueci minha senha / não tenho acesso',
+                          style: TextStyle(
+                            color: Color(0xFF9F2E75),
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ).animate().fadeIn(delay: 600.ms),
                     ],
                   ),
                 ).animate().fadeIn(duration: 1000.ms).scale(),

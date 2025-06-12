@@ -17,7 +17,7 @@ class Env {
   static String get apiUrl2 {
     switch (current) {
       case AppEnvironment.production:
-        return 'http://localhost:3001';
+        return 'https://beuniodontogyn.uniodontogoiania.com.br:3001';
         case AppEnvironment.local:
       return 'http://localhost:3001'; 
       case AppEnvironment.development:
