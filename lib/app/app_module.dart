@@ -17,5 +17,5 @@ class AppModule extends Module {
   void routes(RouteManager r) {
     r.module('/', module: AuthModule());
     r.module('/votacao', module: VotingModule());
-  }  
+  }
 }

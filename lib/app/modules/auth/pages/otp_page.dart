@@ -60,19 +60,15 @@ class _OtpPageState extends State<OtpPage> {
                       color: Color(0xFF9F2E75),
                     ),
                   ).animate().fadeIn().slideY(begin: 0.2),
-
                   const SizedBox(height: 16),
-
                   Text(
                     'Enviamos um código para o número:\n${globalStore.cooperado?.celular ?? 'SEM TELEFONE CADASTRADO'}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 16),
                   ).animate().fadeIn().slideY(begin: 0.3),
-
                   const SizedBox(height: 12),
-
                   const Text(
-                    '⚠️ Se você não tem acesso ao telefone informado, por favor entre em contato com a DRC.',
+                    '⚠️ Se você não tem acesso ao telefone informado, por favor entre em contato com o suporte RTorres.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -80,9 +76,7 @@ class _OtpPageState extends State<OtpPage> {
                       color: Colors.redAccent,
                     ),
                   ).animate().fadeIn().slideY(begin: 0.3),
-
                   const SizedBox(height: 24),
-
                   TextField(
                     controller: _codeController,
                     keyboardType: TextInputType.number,
@@ -96,9 +90,7 @@ class _OtpPageState extends State<OtpPage> {
                       ),
                     ),
                   ).animate().fadeIn().slideY(begin: 0.4),
-
                   const SizedBox(height: 20),
-
                   store.isVerifying
                       ? const CircularProgressIndicator()
                       : SizedBox(
@@ -121,8 +113,7 @@ class _OtpPageState extends State<OtpPage> {
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF9F2E75),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),

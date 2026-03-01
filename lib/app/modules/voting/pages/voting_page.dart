@@ -33,24 +33,22 @@ class _VotingPageState extends State<VotingPage> {
         );
         Modular.to.navigate('/');
       });
-     } else {
+    } else {
       // Carrega pautas e votos, e só depois faz o teste de redirecionamento
       store.votosEnviados.clear();
-      store.loadPautas()
-        .then((_) => store.loadVotosEnviados())
-        .then((_) {
-          // Depois de carregado, se já votou em todas ou tem votos enviados
-          if (store.todosVotosSelecionados || store.votosEnviados.isNotEmpty) {
-            final votosConfirmados = Map<int, List<String>>.from(store.votosEnviados);
-            Modular.to.pushReplacementNamed(
-              '/votacao/confirmacao',
-              arguments: votosConfirmados,
-            );
-          }
-        })
-        .catchError((e) {
-          print('Erro ao carregar dados iniciais: $e');
-        });
+      store.loadPautas().then((_) => store.loadVotosEnviados()).then((_) {
+        // Depois de carregado, se já votou em todas ou tem votos enviados
+        if (store.todosVotosSelecionados || store.votosEnviados.isNotEmpty) {
+          final votosConfirmados =
+              Map<int, List<String>>.from(store.votosEnviados);
+          Modular.to.pushReplacementNamed(
+            '/votacao/confirmacao',
+            arguments: votosConfirmados,
+          );
+        }
+      }).catchError((e) {
+        print('Erro ao carregar dados iniciais: $e');
+      });
     }
   }
 
@@ -60,7 +58,8 @@ class _VotingPageState extends State<VotingPage> {
       appBar: _buildCustomAppBar(),
       body: Observer(
         builder: (_) {
-          if (store.isLoading) return const Center(child: CircularProgressIndicator());
+          if (store.isLoading)
+            return const Center(child: CircularProgressIndicator());
           if (store.error != null) return Center(child: Text(store.error!));
 
           // 1) Ordena aqui
@@ -92,7 +91,8 @@ class _VotingPageState extends State<VotingPage> {
                           if (confirm == true) {
                             try {
                               final votosConfirmados =
-                                  Map<int, List<String>>.from(store.votosSelecionados);
+                                  Map<int, List<String>>.from(
+                                      store.votosSelecionados);
                               await store.confirmarTodosVotos();
                               store.votosSelecionados.clear();
                               await store.loadVotosEnviados();
@@ -103,7 +103,8 @@ class _VotingPageState extends State<VotingPage> {
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('❌ Erros ao registrar votos:\n$e'),
+                                  content:
+                                      Text('❌ Erros ao registrar votos:\n$e'),
                                   backgroundColor: Colors.red,
                                   duration: const Duration(seconds: 6),
                                 ),
@@ -112,10 +113,13 @@ class _VotingPageState extends State<VotingPage> {
                           }
                         }
                       : () {
-                          final id = pautas.firstWhere(
-                            (p) => !store.votosSelecionados.containsKey(p.id),
-                            orElse: () => pautas.first,
-                          ).id;
+                          final id = pautas
+                              .firstWhere(
+                                (p) =>
+                                    !store.votosSelecionados.containsKey(p.id),
+                                orElse: () => pautas.first,
+                              )
+                              .id;
                           final idx = pautas.indexWhere((p) => p.id == id);
                           _scrollController.animateTo(
                             idx * 300.0,
@@ -124,7 +128,8 @@ class _VotingPageState extends State<VotingPage> {
                           );
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('⚠️ Você precisa votar em todas as pautas.'),
+                              content: Text(
+                                  '⚠️ Você precisa votar em todas as pautas.'),
                               backgroundColor: Colors.orange,
                             ),
                           );
@@ -136,8 +141,10 @@ class _VotingPageState extends State<VotingPage> {
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: Colors.grey.shade300,
                     disabledForegroundColor: Colors.grey.shade600,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30)),
                     elevation: 3,
                   ),
                 ),
@@ -157,7 +164,8 @@ class _VotingPageState extends State<VotingPage> {
       actionsPadding: const EdgeInsets.only(bottom: 16, right: 16),
       title: Row(
         children: [
-          Icon(Icons.verified_user_rounded, color: const Color(0xFF9F2E75), size: 32),
+          Icon(Icons.verified_user_rounded,
+              color: const Color(0xFF9F2E75), size: 32),
           const SizedBox(width: 16),
           const Expanded(
             child: Text(
@@ -189,7 +197,10 @@ class _VotingPageState extends State<VotingPage> {
           SizedBox(height: 20),
           Text(
             'Após confirmada, esta ação NÃO poderá ser desfeita.',
-            style: TextStyle(fontSize: 18, color: Colors.redAccent, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                fontSize: 18,
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -201,12 +212,14 @@ class _VotingPageState extends State<VotingPage> {
         ElevatedButton.icon(
           onPressed: () => Navigator.of(ctx).pop(true),
           icon: const Icon(Icons.lock_outline, size: 20),
-          label: const Text('Assinar e Confirmar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          label: const Text('Assinar e Confirmar',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF9F2E75),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ],
@@ -228,7 +241,12 @@ class _VotingPageState extends State<VotingPage> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFF9F2E75).withOpacity(0.2)),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4))
+            ],
           ),
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -248,7 +266,10 @@ class _VotingPageState extends State<VotingPage> {
                   Expanded(
                     child: Text(
                       pauta.titulo,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF2B2B2B)),
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2B2B2B)),
                     ),
                   ),
                 ],
@@ -256,12 +277,14 @@ class _VotingPageState extends State<VotingPage> {
               const SizedBox(height: 10),
               Text(
                 pauta.descricao,
-                style: const TextStyle(fontSize: 14, color: Color(0xFF666666), height: 1.4),
+                style: const TextStyle(
+                    fontSize: 14, color: Color(0xFF666666), height: 1.4),
               ),
               const SizedBox(height: 12),
               if (pauta.multiplaEscolha)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFF9F2E75).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -294,15 +317,14 @@ class _VotingPageState extends State<VotingPage> {
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
                     '✔ Você já votou nesta pauta.',
-                    style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontWeight: FontWeight.w600),
                   ),
                 ),
             ],
           ),
-        )
-        .animate()
-        .fadeIn(duration: 400.ms)
-        .slideY(begin: 0.05);
+        ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05);
       },
     );
   }
@@ -320,7 +342,9 @@ class _VotingPageState extends State<VotingPage> {
           ? null
           : () {
               // 3) Limite de 3 escolhas
-              if (multiplaEscolha && !isSelecionado && selecionados.length >= 3) {
+              if (multiplaEscolha &&
+                  !isSelecionado &&
+                  selecionados.length >= 3) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Você só pode escolher até 3 opções.'),
@@ -336,8 +360,13 @@ class _VotingPageState extends State<VotingPage> {
               );
             },
       style: OutlinedButton.styleFrom(
-        side: BorderSide(color: isSelecionado ? const Color(0xFF9F2E75) : const Color(0xFF9F2E75).withOpacity(0.5)),
-        backgroundColor: isSelecionado ? const Color(0xFF9F2E75).withOpacity(0.9) : Colors.transparent,
+        side: BorderSide(
+            color: isSelecionado
+                ? const Color(0xFF9F2E75)
+                : const Color(0xFF9F2E75).withOpacity(0.5)),
+        backgroundColor: isSelecionado
+            ? const Color(0xFF9F2E75).withOpacity(0.9)
+            : Colors.transparent,
         foregroundColor: isSelecionado ? Colors.white : const Color(0xFF9F2E75),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
@@ -359,11 +388,31 @@ class _VotingPageState extends State<VotingPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('assets/images/logo_complete.png', height: 40),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF9F2E75),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'RT',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 16),
                 const Text(
-                  'Votação Uniodonto',
-                  style: TextStyle(color: Color(0xFF9F2E75), fontSize: 26, fontWeight: FontWeight.w700),
+                  'Votação RTorres',
+                  style: TextStyle(
+                      color: Color(0xFF9F2E75),
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700),
                 ),
               ],
             ),

@@ -11,9 +11,9 @@ class AuthModule extends Module {
   }
 
   @override
-void routes(RouteManager r) {
-  r.child('/', child: (context) => const SplashPage()); // rota padrão
-  r.child('/login', child: (context) => const LoginPage());
-  r.child('/otp', child: (context) => const OtpPage());
-}
+  void routes(RouteManager r) {
+    r.child('/', child: (context) => const SplashPage()); // rota padrão
+    r.child('/login', child: (context) => const LoginPage());
+    r.child('/otp', child: (context) => const OtpPage());
+  }
 }

@@ -10,7 +10,6 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
-
   AuthStore store = AuthStore();
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -18,11 +17,10 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   bool isLoading = false;
   late String param;
 
-
   @override
   void initState() {
-    super.initState();     
-    
+    super.initState();
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -43,7 +41,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     Future.delayed(const Duration(seconds: 5), () {
       Modular.to.navigate('/login');
     });
-  }  
+  }
 
   @override
   void dispose() {
@@ -71,9 +69,23 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
             children: [
               ScaleTransition(
                 scale: _scaleAnimation,
-                child: Image.asset(
-                  'assets/images/logo_white.png',
+                child: Container(
                   width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'RT',
+                      style: TextStyle(
+                        fontSize: 72,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -81,7 +93,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                 duration: const Duration(milliseconds: 800),
                 opacity: _showText ? 1 : 0,
                 child: const Text(
-                  'Bem-vindo à Votação Uniodonto',
+                  'Bem-vindo à Votação RTorres',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 22,

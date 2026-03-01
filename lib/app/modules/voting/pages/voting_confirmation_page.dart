@@ -247,10 +247,27 @@ class _VotingConfirmationPageState extends State<VotingConfirmationPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('assets/images/logo_complete.png', height: 40),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF9F2E75),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'RT',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 16),
                 const Text(
-                  'Votação Uniodonto',
+                  'Votação RTorres',
                   style: TextStyle(
                     color: Color(0xFF9F2E75),
                     fontSize: 26,

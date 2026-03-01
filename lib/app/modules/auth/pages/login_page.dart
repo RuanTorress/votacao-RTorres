@@ -41,10 +41,24 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Logo
-                Image.asset(
-                  'assets/images/logo_white.png',
+                // Logo RTorres (texto em vez de imagem)
+                Container(
+                  width: 100,
                   height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'RT',
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ).animate().fadeIn(duration: 800.ms).slideY(begin: -0.3),
 
                 const SizedBox(height: 40),
@@ -67,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     children: [
                       const Text(
-                        'Entrar com seu CRO e senha',
+                        'Entrar com seu login e senha',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -82,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
                         controller: _croController,
                         keyboardType: TextInputType.text,
                         decoration: InputDecoration(
-                          hintText: 'Digite seu CRO (ex: 12345)',
+                          hintText: 'Digite seu login (ex: 12345)',
                           prefixIcon: const Icon(Icons.badge),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -167,8 +181,7 @@ class _LoginPageState extends State<LoginPage> {
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content:
-                                    Text('CRO não encontrado'),
+                                content: Text('CRO não encontrado'),
                                 backgroundColor: Colors.red,
                               ),
                             );

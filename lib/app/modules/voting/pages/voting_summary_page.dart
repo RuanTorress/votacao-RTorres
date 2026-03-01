@@ -82,13 +82,27 @@ class _VotingSummaryPageState extends State<VotingSummaryPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    'assets/images/logo_complete.png',
+                  Container(
+                    width: 40,
                     height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF9F2E75),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'RT',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   const Text(
-                    'Votação Uniodonto',
+                    'Votação RTorres',
                     style: TextStyle(
                       color: Color(0xFF9F2E75),
                       fontSize: 26,
@@ -132,11 +146,13 @@ class _VotingSummaryPageState extends State<VotingSummaryPage> {
                     final pautaId = item['pauta_id'];
 
                     final dataHora = item['data_hora'] != null
-                        ? DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(item['data_hora']))
+                        ? DateFormat('dd/MM/yyyy HH:mm')
+                            .format(DateTime.parse(item['data_hora']))
                         : '-';
 
                     return Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                       elevation: 4,
                       child: Padding(
                         padding: const EdgeInsets.all(20),
@@ -208,16 +224,18 @@ class _VotingSummaryPageState extends State<VotingSummaryPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF9F2E75),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text('Voltar ao Início', style: TextStyle(fontSize: 16)),
+              child: const Text('Voltar ao Início',
+                  style: TextStyle(fontSize: 16)),
             ),
           ],
         ),
       ),
     );
   }
-} 
+}

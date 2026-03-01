@@ -1,146 +1,111 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-
 import 'package:votacao_uniodonto/app/modules/auth/models/cooperado_models.dart';
-import 'package:votacao_uniodonto/app/shared/env.dart';
 import 'package:votacao_uniodonto/app/shared/service_response.dart';
 
 class AuthServices {
-  final String _baseUrl = Env.apiUrl;
-  final String _baseUrl2 = Env.apiUrl2;
+  // ─── DADOS MOCK DE COOPERADOS ───────────────────────────────────────
+  static final List<Map<String, dynamic>> _cooperadosMock = [
+    {
+      'id': 1,
+      'login': 'UGGO12345',
+      'senha': '123456',
+      'nome_completo': 'João Silva de Oliveira',
+      'cpf': '123.456.789-00',
+      'celular': '(62) 99999-0001',
+      'email': 'joao.silva@email.com',
+      'dt_nascimento': '1985-03-15T00:00:00.000Z',
+    },
+    {
+      'id': 2,
+      'login': 'UGGO67890',
+      'senha': '123456',
+      'nome_completo': 'Maria Fernanda Costa',
+      'cpf': '987.654.321-00',
+      'celular': '(62) 98888-0002',
+      'email': 'maria.costa@email.com',
+      'dt_nascimento': '1990-07-22T00:00:00.000Z',
+    },
+    {
+      'id': 3,
+      'login': 'UGGO11111',
+      'senha': '123456',
+      'nome_completo': 'Carlos Eduardo Pereira',
+      'cpf': '111.222.333-44',
+      'celular': '(62) 97777-0003',
+      'email': 'carlos.pereira@email.com',
+      'dt_nascimento': '1978-11-05T00:00:00.000Z',
+    },
+    {
+      'id': 4,
+      'login': 'UGGO22222',
+      'senha': '123456',
+      'nome_completo': 'Ana Paula Rodrigues',
+      'cpf': '555.666.777-88',
+      'celular': '(62) 96666-0004',
+      'email': 'ana.rodrigues@email.com',
+      'dt_nascimento': '1992-01-30T00:00:00.000Z',
+    },
+    {
+      'id': 5,
+      'login': 'UGGO33333',
+      'senha': '123456',
+      'nome_completo': 'Roberto Mendes Lima',
+      'cpf': '999.888.777-66',
+      'celular': '(62) 95555-0005',
+      'email': 'roberto.lima@email.com',
+      'dt_nascimento': '1980-06-18T00:00:00.000Z',
+    },
+  ];
 
-  /// Busca cooperado com base no login informado
-  Future<ServiceResponse<List<CooperadoModel>>> getCooperadoByLogin(String login) async {
-    final url = Uri.parse('$_baseUrl/usersCoop/getCoopforLogin?value=$login');
+  /// Busca cooperado com base no login informado (MOCK)
+  Future<ServiceResponse<List<CooperadoModel>>> getCooperadoByLogin(
+      String login) async {
+    // Simula um pequeno delay de rede
+    await Future.delayed(const Duration(milliseconds: 500));
 
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Basic YXBwQXV0aERldjpqYW4yMDI0',
-          'Content-Type': 'application/json',
-        },
+      final normalizedLogin = login.toUpperCase();
+      final found = _cooperadosMock.where(
+        (c) => (c['login'] as String).toUpperCase() == normalizedLogin,
       );
 
-      if (response.statusCode == 200 || response.statusCode == 202) {
-        try {
-          final Map<String, dynamic> body = jsonDecode(response.body);
-          final cooperado = CooperadoModel.fromJson(body);
-          return ServiceResponse<List<CooperadoModel>>(success: true, data: [cooperado]);
-        } catch (e) {
-          debugPrint('⚠️ Erro ao decodificar JSON: $e');
-          return ServiceResponse<List<CooperadoModel>>(
-            success: false,
-            message: 'Erro ao processar resposta da API',
-          );
-        }
+      if (found.isNotEmpty) {
+        final cooperado = CooperadoModel.fromJson(found.first);
+        debugPrint('✅ [MOCK] Cooperado encontrado: ${cooperado.nomeCompleto}');
+        return ServiceResponse<List<CooperadoModel>>(
+            success: true, data: [cooperado]);
       } else {
-        String errorMessage = 'Erro ao buscar cooperado.';
-        try {
-          final decoded = jsonDecode(response.body);
-          final error = decoded['error'] ?? '';
-          final details = decoded['details'] ?? '';
-          errorMessage = '$error\n$details'.trim();
-        } catch (_) {
-          debugPrint('⚠️ Corpo de erro não é JSON válido');
-        }
-
-        debugPrint('❌ Erro API: $errorMessage');
+        debugPrint('❌ [MOCK] Cooperado não encontrado para login: $login');
         return ServiceResponse<List<CooperadoModel>>(
           success: false,
-          message: errorMessage,
+          message: 'Cooperado não encontrado para o login informado.',
         );
       }
     } catch (e) {
-      debugPrint('❌ Erro de conexão: $e');
+      debugPrint('❌ [MOCK] Erro ao buscar cooperado: $e');
       return ServiceResponse<List<CooperadoModel>>(
         success: false,
-        message: 'Erro de conexão. Verifique sua rede ou se a API está ativa.',
+        message: 'Erro ao processar dados do cooperado.',
       );
     }
   }
 
-  /// Envia código de verificação via SMS
+  /// Envia código de verificação via SMS (MOCK - sempre sucesso)
   Future<ServiceResponse> sendCode(String phone) async {
-    final url = Uri.parse('$_baseUrl2/auth/send-code');
-
-    // try {
-    //   final response = await http.post(
-    //     url,
-    //     headers: {'Content-Type': 'application/json'},
-    //     body: jsonEncode({'phone': phone}),
-    //   );
-    //
-    //   if (response.statusCode == 200 || response.statusCode == 202) {
-    //     return ServiceResponse(success: true);
-    //   } else {
-    //     String errorMessage = 'Erro ao enviar código.';
-    //     try {
-    //       final decoded = jsonDecode(response.body);
-    //       final error = decoded['error'] ?? '';
-    //       final details = decoded['details'] ?? '';
-    //       errorMessage = '$error\n$details'.trim();
-    //     } catch (_) {
-    //       debugPrint('⚠️ Corpo de erro não é JSON válido');
-    //     }
-    //
-    //     debugPrint('❌ Erro API: $errorMessage');
-    //     return ServiceResponse(success: false, message: errorMessage);
-    //   }
-    // } catch (e) {
-    //   debugPrint('❌ Erro de conexão ao enviar código: $e');
-    //   return ServiceResponse(
-    //     success: false,
-    //     message: 'Erro de conexão. Verifique sua rede ou se a API está ativa.',
-    //   );
-    // }
+    await Future.delayed(const Duration(milliseconds: 300));
+    debugPrint('📲 [MOCK] Código SMS enviado para: $phone');
     return ServiceResponse(success: true);
   }
 
-  /// Autentica cooperado usando token
+  /// Autentica cooperado usando token (MOCK - valida login/senha da lista)
   Future<ServiceResponse<Map<String, dynamic>>> coopLogin(String token) async {
-    final url = Uri.parse('$_baseUrl/usersCoop/handleLogin');
+    await Future.delayed(const Duration(milliseconds: 500));
 
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Basic YXBwQXV0aERldjpqYW4yMDI0',
-        },
-        body: jsonEncode({'token': token}),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 202) {
-        final Map<String, dynamic> body = jsonDecode(response.body);
-        return ServiceResponse<Map<String, dynamic>>(
-          success: true,
-          data: body['data'] as Map<String, dynamic>?,
-        );
-      } else {
-        String errorMessage = 'Erro ao autenticar cooperado.';
-        try {
-          final decoded = jsonDecode(response.body);
-          final error = decoded['error'] ?? '';
-          final details = decoded['details'] ?? '';
-          errorMessage = '$error\n$details'.trim();
-        } catch (_) {
-          debugPrint('⚠️ Corpo de erro não é JSON válido');
-        }
-
-        debugPrint('❌ Erro API: $errorMessage');
-        return ServiceResponse<Map<String, dynamic>>(
-          success: false,
-          message: errorMessage,
-        );
-      }
-    } catch (e) {
-      debugPrint('❌ Erro de conexão: $e');
-      return ServiceResponse<Map<String, dynamic>>(
-        success: false,
-        message: 'Erro de conexão. Verifique sua rede ou se a API está ativa.',
-      );
-    }
+    // No mock, aceitamos qualquer token como válido
+    debugPrint('✅ [MOCK] Login aceito com token');
+    return ServiceResponse<Map<String, dynamic>>(
+      success: true,
+      data: {'authenticated': true},
+    );
   }
 }

@@ -7,7 +7,7 @@ class AppWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Votação Uniodonto',
+      title: 'Votação RTorres',
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: const Color(0xFF8E169E),
